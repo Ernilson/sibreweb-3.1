@@ -1,0 +1,78 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package br.com.sibreweb30.Controller;
+
+import br.com.sibreweb30.Model.Agenda;
+import java.time.LocalDate;
+import java.util.List;
+import javax.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import br.com.sibreweb30.Service.AgendaService;
+
+/**
+ *
+ * @author Convidado
+ */
+@Controller
+public class AgendaControl {
+    
+    @Autowired
+    private AgendaService Pservice;
+    
+    
+      @GetMapping({"/","/index"})
+    public String Incio(){
+        return "index";
+    }
+    
+     @RequestMapping(value="/agendas", method=RequestMethod.GET)
+    public ModelAndView getAgenda(){
+        ModelAndView mv = new ModelAndView("agenda.html");
+        List<Agenda> agendas = Pservice.listAll();
+        mv.addObject("agenda", agendas);
+        return mv;
+    }
+     @RequestMapping(value="/agendas/{id}", method=RequestMethod.GET)
+    public ModelAndView getAgendaDetails(@PathVariable("id") long id){
+        ModelAndView mv = new ModelAndView("agendaDetails.html");
+        Agenda agenda = Pservice.getById(id);
+        mv.addObject("agenda", agenda);
+        return mv;
+    }
+
+     @RequestMapping(value="/newagenda", method=RequestMethod.GET)
+    public String getAgendaForm(){
+        return "agendaForm";
+    }
+    
+    @RequestMapping(value="/newagenda", method=RequestMethod.POST)
+    public String saveAgenda(@Valid Agenda agendas, BindingResult result, RedirectAttributes attributes){
+        if(result.hasErrors()){
+            attributes.addFlashAttribute("mensagem", "Verifique se os campos obrigatórios foram preenchidos!");
+            return "redirect:/newagenda";
+        }
+        
+        agendas.setData(LocalDate.now());
+        Pservice.saveOrUpdate(agendas);
+        return "redirect:/agendas";
+    }
+    
+//    Metodo para excluir dados do cadastro
+    @GetMapping("/remover/{id}")
+    public String excluir(@PathVariable long id) {
+        Pservice.delete(id);
+        return "redirect:/agendas";
+    }
+    
+}
